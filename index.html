@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Custom Label Detection</title>
+    <!-- Add Bootstrap CSS link -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background: rgb(238,174,202);
+            background: radial-gradient(circle, rgba(238,174,202,1) 0%, rgba(148,187,233,1) 100%);
+        }
+        #upload-form {
+            margin: 20px auto;
+            max-width: 500px;
+        }
+        #image-preview {
+            max-width: 200px;
+            width: 100%;
+            height: auto;
+            margin: 20px auto;
+        }
+        #loader {
+            display: none;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar using Bootstrap -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light shadow">
+        <div class="container">
+            <h1 class="navbar-brand">Welcome!</h1>
+            <a class="btn btn-outline-danger" onclick="logout()">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1 class="mt-4">Custom Label Detection</h1>
+        <form id="upload-form" enctype="multipart/form-data">
+            <div class="custom-file mt-4 mb-3">
+                <input type="file" class="custom-file-input" id="image-input" onchange="displayFileName()">
+                <label class="custom-file-label" for="image-input">Choose file</label>
+            </div>
+            <button type="button" class="btn btn-primary" onclick="uploadImage()">Upload & Detect</button>
+        </form>
+        <img id="image-preview" src="" alt="Image Preview" class="img-fluid mt-4 mb-3">
+        <div id="loader">Loading...</div>
+        <h3 id="result"></h3>
+    </div>
+
+    <!-- Add Bootstrap JS and jQuery -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+
+        // if(!localStorage.getItem('authToken')){
+        //     window.location.href="/login.html"  
+        // }
+        const logout=()=>{
+            localStorage.removeItem('authToken')
+            window.location.href="/login.html"
+        }
+        // Function to display the selected file name in the custom file input label
+        function displayFileName() {
+            const fileInput = document.getElementById('image-input');
+            const fileName = fileInput.files[0].name;
+            const label = fileInput.nextElementSibling;
+            label.innerText = fileName;
+        }
+
+        function uploadImage() {
+    const fileInput = document.getElementById('image-input');
+    const file = fileInput.files[0];
+    const formData = new FormData();
+    formData.append('image', file);
+
+    // Show loader
+    const loaderElem = document.getElementById('loader');
+    loaderElem.style.display = 'block';
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', 'http://44.212.0.32:80/api/custom-label-detection');
+    xhr.withCredentials = true; // Include credentials in the request
+    
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
+            // Hide loader
+            loaderElem.style.display = 'none';
+
+            const resultElem = document.getElementById('result');
+            const imagePreviewElem = document.getElementById('image-preview');
+
+            if (xhr.status === 200) {
+                const response = JSON.parse(xhr.responseText);
+                resultElem.textContent = response.Msg;
+            } else {
+                resultElem.textContent = 'Error: ' + xhr.statusText;
+            }
+
+            displayImagePreview(file);
+        }
+    };
+
+    xhr.send(formData);
+}
+
+
+        function displayImagePreview(file) {
+            const imagePreviewElem = document.getElementById('image-preview');
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function() {
+                    imagePreviewElem.src = reader.result;
+                }
+                reader.readAsDataURL(file);
+            } else {
+                imagePreviewElem.src = '';
+            }
+        }
+    </script>
+</body>
+</html>
